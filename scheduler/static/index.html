@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fa">
+  <title>任务调度器</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/history.css?v=3">
+  <link rel="stylesheet" href="/static/graph.css?v=10">
+  <link rel="stylesheet" href="/static/logs.css?v=3">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="任务调度器首页"><span class="brand-mark">S</span><span>任务调度器</span></a>
+    <div class="top-actions"><span class="live-dot"></span><span id="health">正在连接</span><button class="icon-button" id="refresh" title="刷新任务" aria-label="刷新任务">↻</button></div>
+  </header>
+  <main>
+    <section class="page-heading"><div><p class="eyebrow">SCHEDULER / CONTROL PLANE</p><h1>任务</h1><p class="subheading">管理运行计划，查看最近执行情况。</p></div><button class="primary" id="new-job"><span aria-hidden="true">＋</span> 新建任务</button></section>
+    <section class="summary" aria-label="任务统计">
+      <div class="metric"><span>已注册任务</span><strong id="job-count">—</strong></div>
+      <div class="metric"><span>最近成功</span><strong id="success-count">—</strong></div>
+      <div class="metric"><span>最近失败</span><strong id="failure-count">—</strong></div>
+      <div class="metric"><span>调度时区</span><strong id="timezone">—</strong></div>
+    </section>
+    <section class="workspace graph-section">
+      <div class="section-head graph-toolbar"><div><h2>依赖关系图</h2><span class="section-note">拖动节点调整布局；点击节点“连接下游”或拖动底部圆点添加依赖；点击连线上的 × 删除依赖</span></div><div class="graph-controls"><button class="graph-control" id="zoom-out" type="button" title="缩小" aria-label="缩小">−</button><span id="zoom-level" aria-live="polite">100%</span><button class="graph-control" id="zoom-in" type="button" title="放大" aria-label="放大">＋</button><button class="text-button" id="fit-graph" type="button">适应画布</button><button class="text-button" id="reset-layout" type="button">重置布局</button></div></div>
+      <div class="graph-viewport" id="graph-viewport"><div class="graph-stage" id="graph-stage"><div class="graph-canvas" id="graph-canvas"><svg id="graph-edges" aria-label="任务依赖连线"></svg><div id="graph-nodes"></div></div></div></div>
+      <div class="graph-legend"><span><i class="legend-root"></i>调度入口</span><span><i class="legend-task"></i>依赖任务</span><span>箭头指向下游；× 删除依赖</span></div>
+    </section>
+    <section class="workspace">
+      <div class="section-head"><div><h2>已注册任务</h2><span class="section-note">计划在服务重启后保留</span></div><a class="text-button" href="/logs" target="_blank" rel="noopener noreferrer">查看执行日志</a></div>
+      <div class="table-wrap"><table><thead><tr><th>任务</th><th>执行命令</th><th>计划</th><th>依赖任务 ID</th><th>下次运行</th><th>近 5 天状态</th><th aria-label="操作"></th></tr></thead><tbody id="jobs"><tr><td colspan="7" class="empty">正在读取任务…</td></tr></tbody></table></div>
+    </section>
+    <p class="footer-note">运行命令使用参数数组，不经过 shell 解释。请仅注册可信任的程序和脚本。</p>
+  </main>
+  <dialog id="job-dialog">
+    <form id="job-form" method="dialog">
+      <div class="dialog-head"><div><p class="eyebrow">TASK SCHEDULE</p><h2 id="dialog-title">新建任务</h2></div><button class="icon-button" type="button" id="close-dialog" aria-label="关闭">×</button></div>
+      <label>任务 ID <input name="id" required pattern="[a-zA-Z0-9][a-zA-Z0-9_.-]{0,99}" placeholder="daily-report" maxlength="100"><small>唯一标识，仅支持字母、数字、点、下划线和连字符。</small></label>
+      <label>名称 <input name="name" required maxlength="160" placeholder="每日数据报告"></label>
+      <label>上游依赖 <select name="depends_on" id="depends-on" multiple size="4"></select><small>可多选；有依赖的任务可等待上游成功，也可设置自己的定时计划。留空表示调度入口。</small></label>
+      <div class="two-col"><label>可执行程序 <input name="executable" placeholder="python"></label><label>超时（秒） <input name="timeout" type="number" min="1" max="86400" value="300" required></label></div>
+      <small>不填写可执行程序即可创建空逻辑节点，用于分支、汇合或调度入口。</small>
+      <label>命令参数 <textarea name="arguments" rows="2" placeholder="每行一个参数，例如：&#10;/opt/jobs/report.py&#10;--format&#10;csv"></textarea><small>每行作为独立参数传入，不支持 shell 管道、重定向或变量展开。</small></label>
+      <label>工作目录 <input name="cwd" placeholder="可选，例如 /opt/jobs"></label>
+      <label>时区 <input name="timezone" placeholder="Asia/Shanghai"><small>留空使用服务默认时区。</small></label>
+      <label id="own-schedule-row" class="schedule-toggle" hidden><input type="checkbox" id="has-own-schedule"> 为此任务单独设置运行计划</label>
+      <fieldset id="schedule-config"><legend>运行计划</legend><div class="segmented"><label><input type="radio" name="schedule" value="interval" checked><span>固定间隔</span></label><label><input type="radio" name="schedule" value="cron"><span>Cron</span></label><label><input type="radio" name="schedule" value="date"><span>指定时间</span></label></div>
+        <label class="schedule-field" data-for="interval">每隔 <span class="inline-input"><input name="interval" type="number" min="1" value="3600" required><span>秒</span></span></label>
+        <label class="schedule-field" data-for="cron" hidden>Cron 表达式 <input name="cron" placeholder="0 9 * * 1-5" required><small>五段格式：分 时 日 月 周；数字星期遵循常见 crontab 规则，0 或 7 为周日，1 至 6 为周一至周六。默认使用服务配置时区。</small></label>
+        <label class="schedule-field" data-for="date" hidden>运行时间 <input name="run_at" type="datetime-local" required></label>
+      </fieldset>
+      <p class="form-error" id="form-error" role="alert"></p>
+      <div class="dialog-actions"><button type="button" class="secondary" id="cancel">取消</button><button class="primary" id="submit-job">创建任务</button></div>
+    </form>
+  </dialog>
+  <dialog id="manual-run-dialog" class="run-dialog"><div class="run-dialog-content"><div class="dialog-head"><div><p class="eyebrow">MANUAL RUN</p><h2>选择运行范围</h2></div><button class="icon-button" type="button" id="close-manual-run" aria-label="关闭">×</button></div><p id="manual-run-job" class="run-meta"></p><div class="dialog-actions"><button type="button" class="secondary" id="run-self">仅运行此任务</button><button type="button" class="primary" id="run-downstream">运行此任务及下游</button></div></div></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="/static/app.js?v=13" defer></script>
+</body>
+</html>

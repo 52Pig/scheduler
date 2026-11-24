@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7fa">
+  <title>执行日志 · 任务调度器</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/graph.css?v=8">
+  <link rel="stylesheet" href="/static/logs.css?v=3">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="返回任务调度器"><span class="brand-mark">S</span><span>任务调度器</span></a>
+    <div class="top-actions"><span id="health">执行记录</span><a class="text-button" href="/">返回任务</a></div>
+  </header>
+  <main>
+    <section class="page-heading"><div><p class="eyebrow">TASK EXECUTION / RETENTION 5 DAYS</p><h1>执行日志</h1><p class="subheading">按任务、日期和状态查询运行记录；日志明细保留最近 5 天。</p></div><button class="primary" id="refresh-logs">刷新</button></section>
+    <section class="workspace log-filters">
+      <label>任务<select id="filter-job"><option value="">全部任务</option></select></label>
+      <label>日期<input id="filter-date" type="date"></label>
+      <label>状态<select id="filter-status"><option value="">全部状态</option><option value="running">运行中</option><option value="succeeded">成功</option><option value="failed">失败</option><option value="timed_out">超时</option><option value="skipped">跳过</option><option value="cancelled">已停止</option></select></label>
+      <button class="secondary" id="clear-filters">清除筛选</button>
+      <span id="retention-label">最近 5 天</span>
+    </section>
+    <section class="workspace">
+      <div class="section-head"><div><h2>运行记录</h2><span class="section-note" id="result-count">正在读取…</span></div></div>
+      <div class="table-wrap"><table class="log-table"><thead><tr><th>开始时间</th><th>任务 ID</th><th>任务名称</th><th>工作流</th><th>状态</th><th>退出码</th><th></th></tr></thead><tbody id="log-rows"><tr><td colspan="7" class="empty">正在读取日志…</td></tr></tbody></table></div>
+      <div class="log-pagination"><button class="secondary" id="previous-page">上一页</button><span id="page-label"></span><button class="secondary" id="next-page">下一页</button></div>
+    </section>
+  </main>
+  <dialog id="log-detail-dialog" class="run-dialog"><div class="run-dialog-content">
+    <div class="dialog-head"><div><p class="eyebrow">TASK EXECUTION DETAIL</p><h2 id="detail-title">执行详情</h2></div><button class="icon-button" id="close-detail" type="button" aria-label="关闭">×</button></div>
+    <div class="run-meta" id="detail-meta"></div>
+    <div class="detail-actions"><button class="secondary" id="rerun-detail" type="button">按当前定义重跑此节点</button><button class="secondary danger" id="stop-run" type="button" hidden>停止本次运行</button><span id="rerun-note">只运行当前节点，不触发其上游或下游</span></div>
+    <pre id="detail-output">正在读取…</pre>
+    <div class="dialog-actions"><button class="secondary" id="close-detail-button" type="button">关闭</button></div>
+  </div></dialog>
+  <div id="toast" role="status" aria-live="polite"></div>
+  <script src="/static/logs.js?v=3" defer></script>
+</body>
+</html>

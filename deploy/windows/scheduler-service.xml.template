@@ -1,0 +1,33 @@
+<service>
+  <id>SchedulerService</id>
+  <name>Task Scheduler Control Plane</name>
+  <description>Persistent local task scheduler and workflow web console.</description>
+  <executable>@@PYTHON@@</executable>
+  <arguments>-u -m scheduler.cli serve</arguments>
+  <workingdirectory>@@PROJECT_ROOT@@</workingdirectory>
+  <startmode>Automatic</startmode>
+  <delayedAutoStart>true</delayedAutoStart>
+  <stoptimeout>30 sec</stoptimeout>
+  <onfailure action="restart" delay="5 sec" />
+  <onfailure action="restart" delay="30 sec" />
+  <onfailure action="restart" delay="60 sec" />
+  <resetfailure>1 hour</resetfailure>
+  <serviceaccount>
+    <domain>NT AUTHORITY</domain>
+    <user>LocalService</user>
+  </serviceaccount>
+  <env name="PYTHONUNBUFFERED" value="1" />
+  <env name="PYTHONPATH" value="@@PROJECT_ROOT@@" />
+  <env name="SCHEDULER_HOST" value="127.0.0.1" />
+  <env name="SCHEDULER_PORT" value="1000" />
+  <env name="SCHEDULER_TIMEZONE" value="Asia/Shanghai" />
+  <env name="SCHEDULER_DATABASE_URL" value="@@DATABASE_URL@@" />
+  <env name="SCHEDULER_API_URL" value="http://127.0.0.1:1000" />
+  <logpath>@@LOG_DIR@@</logpath>
+  <log mode="roll-by-size-time">
+    <sizeThreshold>10240</sizeThreshold>
+    <pattern>yyyyMMdd</pattern>
+    <autoRollAtTime>00:00:00</autoRollAtTime>
+    <keepFiles>30</keepFiles>
+  </log>
+</service>

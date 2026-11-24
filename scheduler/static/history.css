@@ -1,0 +1,13 @@
+.run-history{display:flex;align-items:center;gap:3px;max-width:190px;overflow-x:auto;scrollbar-width:thin;padding:5px 1px}
+.run-history-day{display:flex;align-items:center;gap:3px;flex:0 0 auto;padding-right:6px;margin-right:3px;border-right:1px solid #e5eaee}
+.run-history-day:last-child{border-right:0;margin-right:0;padding-right:0}
+.run-dot{display:block;flex:0 0 9px;width:9px;height:9px;border:1px solid transparent;border-radius:50%;transition:transform .12s ease,box-shadow .12s ease}
+.run-dot:hover,.run-dot:focus-visible{transform:scale(1.35);box-shadow:0 0 0 2px #d8e3e6;outline:0}
+.run-dot.succeeded{background:#2e9b68}
+.run-dot.failed,.run-dot.timed_out{background:#c94e43}
+.run-dot.running{background:#4a83c2;animation:run-pulse 1.5s ease-in-out infinite}
+.run-dot.skipped{background:#a4adb6}
+.run-dot.cancelled{background:#697883}
+.run-history-empty{color:#a0a8b0;font-size:12px}
+@keyframes run-pulse{50%{box-shadow:0 0 0 3px #4a83c233}}
+@media(prefers-reduced-motion:reduce){.run-dot{transition:none}.run-dot.running{animation:none}}
